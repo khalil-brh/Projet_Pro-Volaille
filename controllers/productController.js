@@ -1,4 +1,20 @@
 const Product = require("../models/Product");
+const cloudinary = require("../config/cloudinary");
+
+
+// Upload buffer to Cloudinary
+const uploadToCloudinary = (fileBuffer) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            { folder: "pro-volaille/products" },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            }
+        );
+        stream.end(fileBuffer);
+    });
+};
 
 
 // CREATE PRODUCT (ADMIN)
@@ -6,7 +22,15 @@ exports.createProduct = async (req, res) => {
 
     try {
 
-        const product = new Product(req.body);
+        const { title, description, quantity, price } = req.body;
+        let imageUrl = null;
+
+        if (req.file) {
+            const result = await uploadToCloudinary(req.file.buffer);
+            imageUrl = result.secure_url;
+        }
+
+        const product = new Product({ title, description, quantity, price, imageUrl });
 
         await product.save();
 
@@ -14,7 +38,7 @@ exports.createProduct = async (req, res) => {
 
     } catch (error) {
 
-        res.status(500).json(error.message);
+        res.status(500).json({ message: error.message });
 
     }
 
@@ -32,7 +56,7 @@ exports.getProducts = async (req, res) => {
 
     } catch (error) {
 
-        res.status(500).json(error.message);
+        res.status(500).json({ message: error.message });
 
     }
 
@@ -44,9 +68,16 @@ exports.updateProduct = async (req, res) => {
 
     try {
 
+        const updateData = { ...req.body };
+
+        if (req.file) {
+            const result = await uploadToCloudinary(req.file.buffer);
+            updateData.imageUrl = result.secure_url;
+        }
+
         const product = await Product.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData,
             { new: true }
         );
 
@@ -54,7 +85,7 @@ exports.updateProduct = async (req, res) => {
 
     } catch (error) {
 
-        res.status(500).json(error.message);
+        res.status(500).json({ message: error.message });
 
     }
 
@@ -72,7 +103,7 @@ exports.deleteProduct = async (req, res) => {
 
     } catch (error) {
 
-        res.status(500).json(error.message);
+        res.status(500).json({ message: error.message });
 
     }
 

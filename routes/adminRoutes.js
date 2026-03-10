@@ -40,6 +40,7 @@ router.post("/admin/login", async (req, res) => {
 
 const {
     getAllUsers,
+    getUser,
     approveUser,
     rejectUser,
     deleteUser
@@ -48,6 +49,9 @@ const {
 
 // GET USERS
 router.get("/admin/users", adminAuth, getAllUsers);
+
+// GET SINGLE USER
+router.get("/admin/users/:id", adminAuth, getUser);
 
 // APPROVE USER
 router.put("/admin/users/:id/approve", adminAuth,approveUser);

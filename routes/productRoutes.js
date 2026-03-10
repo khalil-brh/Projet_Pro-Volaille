@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const adminAuth = require("../middleware/adminAuth");
+const upload = require("../middleware/upload");
 
 const {
     createProduct,
@@ -16,9 +17,9 @@ router.get("/products", getProducts);
 
 
 // ADMIN ROUTES
-router.post("/admin/products", adminAuth, createProduct);
+router.post("/admin/products", adminAuth, upload.single("image"), createProduct);
 
-router.put("/admin/products/:id", adminAuth, updateProduct);
+router.put("/admin/products/:id", adminAuth, upload.single("image"), updateProduct);
 
 router.delete("/admin/products/:id", adminAuth, deleteProduct);
 
