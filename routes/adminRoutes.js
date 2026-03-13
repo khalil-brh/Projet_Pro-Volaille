@@ -46,6 +46,12 @@ const {
     deleteUser
 } = require("../controllers/adminController");
 
+const {
+    getNotifications,
+    markAsRead,
+    markAllAsRead
+} = require("../controllers/notificationController");
+
 
 // GET USERS
 router.get("/admin/users", adminAuth, getAllUsers);
@@ -61,5 +67,10 @@ router.put("/admin/users/:id/reject", adminAuth,rejectUser);
 
 // DELETE USER
 router.delete("/admin/users/:id", adminAuth,deleteUser);
+
+// NOTIFICATIONS
+router.get("/admin/notifications", adminAuth, getNotifications);
+router.put("/admin/notifications/read-all", adminAuth, markAllAsRead);
+router.put("/admin/notifications/:id/read", adminAuth, markAsRead);
 
 module.exports = router;

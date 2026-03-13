@@ -1,4 +1,5 @@
 const express = require("express");
+const http = require("http");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
@@ -6,8 +7,13 @@ require("dotenv").config();
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const productRoutes = require("./routes/productRoutes");
+const socket = require("./socket");
 
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+socket.init(server);
 
 // Middleware (BEFORE routes)
 app.use(cors());
@@ -22,6 +28,6 @@ app.use("/api", userRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", productRoutes);
 
-app.listen(process.env.PORT || 5001, () => {
+server.listen(process.env.PORT || 5001, () => {
     console.log(`Server running on port ${process.env.PORT || 5001}`);
 });

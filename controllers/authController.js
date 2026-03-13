@@ -32,6 +32,32 @@ exports.adminLogin = async (req, res) => {
 };
 
 
+exports.getMe = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            return res.status(401).json({ message: "Non autorisé" });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur non trouvé" });
+        }
+
+        res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            companyName: user.companyName,
+            role: user.role,
+            isValid: user.isValid,
+        });
+    } catch (error) {
+        res.status(401).json({ message: "Token invalide" });
+    }
+};
+
 exports.userLogin = async (req, res) => {
 
     try {
