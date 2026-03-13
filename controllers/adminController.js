@@ -1,4 +1,7 @@
 const User = require("../models/User");
+const Notification = require("../models/Notification");
+const socket = require("../socket");
+const { sendApprovalEmail } = require("../utils/sendEmail");
 
 
 // GET ALL USERS
@@ -24,6 +27,19 @@ exports.approveUser = async (req, res) => {
             { isValid: true },
             { new: true }
         );
+
+        // Create and emit notification for the user
+        const notification = await Notification.create({
+            type: "user_approved",
+            message: "Votre compte a été approuvé ! Vous pouvez maintenant voir les prix.",
+            userId: user._id,
+        });
+
+        const io = socket.getIO();
+        io.emit(`notification_${user._id}`, notification);
+
+        // Send approval email
+        sendApprovalEmail(user.email, user.name).catch(() => {});
 
         res.json({
             message: "User approved",

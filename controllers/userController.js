@@ -1,6 +1,9 @@
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const bcrypt = require("bcrypt");
 const cloudinary = require("../config/cloudinary");
+const socket = require("../socket");
+const { sendVerificationEmail } = require("../utils/sendEmail");
 
 
 // Upload buffer to Cloudinary
@@ -26,15 +29,16 @@ const uploadToCloudinary = (fileBuffer, originalname, mimetype) => {
 exports.createUser = async (req, res) => {
     try {
 
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ message: "Veuillez fournir au moins un document (PDF ou image)" });
+        }
+
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-        let files = [];
-        if (req.files && req.files.length > 0) {
-            const uploads = req.files.map(file =>
-                uploadToCloudinary(file.buffer, file.originalname, file.mimetype)
-            );
-            files = await Promise.all(uploads);
-        }
+        const uploads = req.files.map(file =>
+            uploadToCloudinary(file.buffer, file.originalname, file.mimetype)
+        );
+        const files = await Promise.all(uploads);
 
         const user = new User({
             companyName: req.body.companyName,
@@ -46,6 +50,19 @@ exports.createUser = async (req, res) => {
         });
 
         await user.save();
+
+        // Create and emit real-time notification for admin
+        const notification = await Notification.create({
+            type: "new_user",
+            message: `Nouvelle inscription : ${user.name} (${user.companyName})`,
+            userId: user._id,
+        });
+
+        const io = socket.getIO();
+        io.emit("new_notification", notification);
+
+        // Send verification email
+        sendVerificationEmail(user.email, user.name).catch(() => {});
 
         res.status(201).json(user);
 
