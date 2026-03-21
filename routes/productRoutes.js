@@ -4,9 +4,13 @@ const router = express.Router();
 const adminAuth = require("../middleware/adminAuth");
 const upload = require("../middleware/upload");
 
+const userAuth = require("../middleware/userAuth");
+
 const {
     createProduct,
     getProducts,
+    getProductsPaginated,
+    getMyProducts,
     updateProduct,
     deleteProduct
 } = require("../controllers/productController");
@@ -15,8 +19,13 @@ const {
 // PUBLIC ROUTE
 router.get("/products", getProducts);
 
+// AUTHENTICATED USER ROUTE (with discount applied)
+router.get("/products/me", userAuth, getMyProducts);
+
 
 // ADMIN ROUTES
+router.get("/admin/products", adminAuth, getProductsPaginated);
+
 router.post("/admin/products", adminAuth, upload.single("image"), createProduct);
 
 router.put("/admin/products/:id", adminAuth, upload.single("image"), updateProduct);

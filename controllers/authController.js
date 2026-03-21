@@ -47,9 +47,12 @@ exports.getMe = async (req, res) => {
 
         res.json({
             id: user._id,
+            accountType: user.accountType,
             name: user.name,
             email: user.email,
             companyName: user.companyName,
+            companyId: user.companyId,
+            cin: user.cin,
             role: user.role,
             isValid: user.isValid,
         });
@@ -62,18 +65,24 @@ exports.userLogin = async (req, res) => {
 
     try {
 
-        const { email, password } = req.body;
+        const { identifier, password } = req.body;
 
-        const user = await User.findOne({ email });
+        // Search by companyId or cin
+        const user = await User.findOne({
+            $or: [
+                { companyId: identifier },
+                { cin: identifier }
+            ]
+        });
 
         if (!user) {
-            return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+            return res.status(401).json({ message: "Identifiant ou mot de passe incorrect" });
         }
 
         const validPassword = await bcrypt.compare(password, user.password);
 
         if (!validPassword) {
-            return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+            return res.status(401).json({ message: "Identifiant ou mot de passe incorrect" });
         }
 
         const token = jwt.sign(
@@ -87,9 +96,12 @@ exports.userLogin = async (req, res) => {
             token,
             user: {
                 id: user._id,
+                accountType: user.accountType,
                 name: user.name,
                 email: user.email,
                 companyName: user.companyName,
+                companyId: user.companyId,
+                cin: user.cin,
                 role: user.role,
                 isValid: user.isValid,
             }
