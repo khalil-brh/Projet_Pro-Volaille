@@ -3,7 +3,7 @@ const Notification = require("../models/Notification");
 // GET ADMIN NOTIFICATIONS (exclude user-facing notifications)
 exports.getNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.find({ type: { $ne: "user_approved" } })
+        const notifications = await Notification.find({ type: { $in: ["new_user", "new_contact", "new_order"] } })
             .sort({ createdAt: -1 })
             .populate("userId", "name email companyName");
         res.json(notifications);
@@ -42,8 +42,10 @@ exports.markAllAsRead = async (req, res) => {
 // GET USER NOTIFICATIONS (for logged-in user)
 exports.getUserNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.find({ userId: req.userId })
-            .sort({ createdAt: -1 });
+        const notifications = await Notification.find({
+            userId: req.userId,
+            type: { $in: ["user_approved", "order_update"] },
+        }).sort({ createdAt: -1 });
         res.json(notifications);
     } catch (error) {
         res.status(500).json({ message: error.message });
