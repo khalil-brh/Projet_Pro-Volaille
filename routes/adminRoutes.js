@@ -7,51 +7,49 @@ const jwt = require("jsonwebtoken");
 const adminAuth = require("../middleware/adminAuth");
 
 router.post("/admin/login", async (req, res) => {
+  const { email, password } = req.body;
 
-    const { email, password } = req.body;
+  const admin = await User.findOne({ email });
 
-    const admin = await User.findOne({ email });
+  if (!admin || admin.role !== "admin") {
+    return res.status(401).json({ message: "Not admin" });
+  }
 
-    if (!admin || admin.role !== "admin") {
-        return res.status(401).json({ message: "Not admin" });
-    }
+  const validPassword = await bcrypt.compare(password, admin.password);
 
-    const validPassword = await bcrypt.compare(password, admin.password);
+  if (!validPassword) {
+    return res.status(401).json({ message: "Invalid password" });
+  }
 
-    if (!validPassword) {
-        return res.status(401).json({ message: "Invalid password" });
-    }
+  const token = jwt.sign(
+    {
+      id: admin._id,
+      role: admin.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" },
+  );
 
-    const token = jwt.sign(
-        {
-            id: admin._id,
-            role: admin.role
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-    );
-
-    res.json({
-        message: "Admin logged in",
-        token
-    });
-
+  res.json({
+    message: "Admin logged in",
+    token,
+  });
 });
 
 const {
-    getAllUsers,
-    getUser,
-    approveUser,
-    rejectUser,
-    deleteUser
+  getAllUsers,
+  getUser,
+  approveUser,
+  rejectUser,
+  updateUserDiscount,
+  deleteUser,
 } = require("../controllers/adminController");
 
 const {
-    getNotifications,
-    markAsRead,
-    markAllAsRead
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
 } = require("../controllers/notificationController");
-
 
 // GET USERS
 router.get("/admin/users", adminAuth, getAllUsers);
@@ -60,13 +58,16 @@ router.get("/admin/users", adminAuth, getAllUsers);
 router.get("/admin/users/:id", adminAuth, getUser);
 
 // APPROVE USER
-router.put("/admin/users/:id/approve", adminAuth,approveUser);
+router.put("/admin/users/:id/approve", adminAuth, approveUser);
 
 // REJECT USER
-router.put("/admin/users/:id/reject", adminAuth,rejectUser);
+router.put("/admin/users/:id/reject", adminAuth, rejectUser);
+
+// UPDATE USER DISCOUNT
+router.put("/admin/users/:id/discount", adminAuth, updateUserDiscount);
 
 // DELETE USER
-router.delete("/admin/users/:id", adminAuth,deleteUser);
+router.delete("/admin/users/:id", adminAuth, deleteUser);
 
 // NOTIFICATIONS
 router.get("/admin/notifications", adminAuth, getNotifications);

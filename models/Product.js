@@ -24,6 +24,23 @@ const ProductSchema = new mongoose.Schema({
 
     imageUrl: {
         type: String
+    },
+
+    discount: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+    },
+
+    discountStartDate: {
+        type: Date,
+        default: null
+    },
+
+    discountEndDate: {
+        type: Date,
+        default: null
     }
 
 }, { timestamps: true });

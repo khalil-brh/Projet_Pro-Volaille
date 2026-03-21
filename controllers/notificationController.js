@@ -1,9 +1,9 @@
 const Notification = require("../models/Notification");
 
-// GET ALL NOTIFICATIONS
+// GET ADMIN NOTIFICATIONS (exclude user-facing notifications)
 exports.getNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.find()
+        const notifications = await Notification.find({ type: { $ne: "user_approved" } })
             .sort({ createdAt: -1 })
             .populate("userId", "name email companyName");
         res.json(notifications);

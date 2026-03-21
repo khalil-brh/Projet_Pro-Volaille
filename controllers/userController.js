@@ -41,7 +41,10 @@ exports.createUser = async (req, res) => {
         const files = await Promise.all(uploads);
 
         const user = new User({
+            accountType: req.body.accountType || "individual",
             companyName: req.body.companyName,
+            companyId: req.body.companyId,
+            cin: req.body.cin,
             name: req.body.name,
             number: req.body.number,
             email: req.body.email,
@@ -54,7 +57,9 @@ exports.createUser = async (req, res) => {
         // Create and emit real-time notification for admin
         const notification = await Notification.create({
             type: "new_user",
-            message: `Nouvelle inscription : ${user.name} (${user.companyName})`,
+            message: user.accountType === "company"
+                ? `Nouvelle inscription entreprise : ${user.name} (${user.companyName})`
+                : `Nouvelle inscription particulier : ${user.name}`,
             userId: user._id,
         });
 
