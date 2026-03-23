@@ -41,7 +41,8 @@ const {
   getUser,
   approveUser,
   rejectUser,
-  updateUserDiscount,
+  updateUserDiscounts,
+  adminUpdateUser,
   deleteUser,
 } = require("../controllers/adminController");
 
@@ -63,8 +64,11 @@ router.put("/admin/users/:id/approve", adminAuth, approveUser);
 // REJECT USER
 router.put("/admin/users/:id/reject", adminAuth, rejectUser);
 
-// UPDATE USER DISCOUNT
-router.put("/admin/users/:id/discount", adminAuth, updateUserDiscount);
+// UPDATE USER DISCOUNTS (per-product)
+router.put("/admin/users/:id/discounts", adminAuth, updateUserDiscounts);
+
+// UPDATE USER (admin edits profile)
+router.put("/admin/users/:id", adminAuth, adminUpdateUser);
 
 // DELETE USER
 router.delete("/admin/users/:id", adminAuth, deleteUser);
