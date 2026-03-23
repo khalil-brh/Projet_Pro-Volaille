@@ -37,8 +37,11 @@ exports.getCart = async (req, res) => {
         const activeDiscount = getActiveDiscount(product);
 
         let unitPrice = product.price;
-        if (user.discountPercentage > 0) {
-          unitPrice = +(unitPrice * (1 - user.discountPercentage / 100)).toFixed(2);
+        const userDiscount = (user.discounts || []).find(
+          (d) => d.productId.toString() === product._id.toString()
+        );
+        if (userDiscount && userDiscount.percentage > 0) {
+          unitPrice = +(unitPrice * (1 - userDiscount.percentage / 100)).toFixed(2);
         }
         if (activeDiscount > 0) {
           unitPrice = +(unitPrice * (1 - activeDiscount / 100)).toFixed(2);

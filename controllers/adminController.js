@@ -27,6 +27,7 @@ exports.getAllUsers = async (req, res) => {
 
         const total = await User.countDocuments(filter);
         const users = await User.find(filter)
+            .populate("discounts.productId", "title price")
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
@@ -49,16 +50,9 @@ exports.getAllUsers = async (req, res) => {
 exports.approveUser = async (req, res) => {
     try {
 
-        const { discountPercentage } = req.body || {};
-
-        const updateData = { isValid: true };
-        if (discountPercentage !== undefined) {
-            updateData.discountPercentage = discountPercentage;
-        }
-
         const user = await User.findByIdAndUpdate(
             req.params.id,
-            updateData,
+            { isValid: true },
             { new: true }
         );
 
@@ -125,29 +119,100 @@ exports.getUser = async (req, res) => {
 };
 
 
-// UPDATE USER DISCOUNT
-exports.updateUserDiscount = async (req, res) => {
+// UPDATE USER DISCOUNTS (per-product)
+exports.updateUserDiscounts = async (req, res) => {
     try {
+        const { discounts } = req.body;
 
-        const { discountPercentage } = req.body;
-
-        if (discountPercentage === undefined) {
-            return res.status(400).json({ message: "discountPercentage is required" });
+        if (!Array.isArray(discounts)) {
+            return res.status(400).json({ message: "discounts array is required" });
         }
 
         const user = await User.findByIdAndUpdate(
             req.params.id,
-            { discountPercentage },
+            { discounts },
             { new: true, runValidators: true }
-        );
+        ).populate("discounts.productId", "title");
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.json({ message: "Discount updated", user });
+        // Notify user
+        const notification = await Notification.create({
+            type: "profile_updated",
+            message: "Vos remises personnalisées ont été mises à jour par un administrateur.",
+            userId: user._id,
+        });
+
+        const io = socket.getIO();
+        io.emit(`notification_${user._id}`, notification);
+
+        res.json({ message: "Discounts updated", user });
 
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+// UPDATE USER (admin edits any field)
+exports.adminUpdateUser = async (req, res) => {
+    try {
+        const allowedFields = ["name", "email", "number", "address", "companyName", "companyId", "cin"];
+        const updates = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ message: "Aucun champ à mettre à jour" });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            updates,
+            { new: true, runValidators: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur non trouvé" });
+        }
+
+        // Build a readable list of changed fields
+        const fieldLabels = {
+            name: "Nom",
+            email: "Email",
+            number: "Téléphone",
+            address: "Adresse",
+            companyName: "Nom de l'entreprise",
+            companyId: "Identifiant entreprise",
+            cin: "CIN",
+        };
+        const changedFields = Object.keys(updates).map(f => fieldLabels[f] || f).join(", ");
+
+        // Send notification to the user
+        const notification = await Notification.create({
+            type: "profile_updated",
+            message: `Votre profil a été mis à jour par un administrateur. Champs modifiés : ${changedFields}.`,
+            userId: user._id,
+        });
+
+        const io = socket.getIO();
+        io.emit(`notification_${user._id}`, notification);
+
+        res.json({ message: "Utilisateur mis à jour", user });
+    } catch (error) {
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            const messages = {
+                email: "Cet email est déjà utilisé",
+                number: "Ce numéro de téléphone est déjà utilisé",
+            };
+            return res.status(400).json({ message: messages[field] || "Cette valeur existe déjà" });
+        }
         res.status(500).json({ message: error.message });
     }
 };

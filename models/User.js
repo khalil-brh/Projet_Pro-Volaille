@@ -10,6 +10,10 @@ const UserSchema = new mongoose.Schema({
     companyId: String,
     cin: String,
     name: String,
+    address: {
+        type: String,
+        required: true
+    },
     number: {
         type: String,
         unique: true,
@@ -36,12 +40,20 @@ const UserSchema = new mongoose.Schema({
         default: false
     },
 
-    discountPercentage: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 100
-    },
+    discounts: [
+        {
+            productId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product"
+            },
+            percentage: {
+                type: Number,
+                min: 0,
+                max: 100,
+                default: 0
+            }
+        }
+    ],
 
     files: [
         {

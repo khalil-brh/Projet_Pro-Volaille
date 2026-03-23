@@ -102,10 +102,13 @@ exports.getMyProducts = async (req, res) => {
             const p = product.toObject();
             const activeDiscount = getActiveDiscount(p);
 
-            // Apply user-specific discount silently to base price
+            // Apply user-specific per-product discount silently to base price
             let basePrice = p.price;
-            if (user.discountPercentage > 0) {
-                basePrice = +(basePrice * (1 - user.discountPercentage / 100)).toFixed(2);
+            const userDiscount = (user.discounts || []).find(
+                (d) => d.productId.toString() === p._id.toString()
+            );
+            if (userDiscount && userDiscount.percentage > 0) {
+                basePrice = +(basePrice * (1 - userDiscount.percentage / 100)).toFixed(2);
             }
 
             if (activeDiscount > 0) {

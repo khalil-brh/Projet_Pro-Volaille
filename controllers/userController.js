@@ -46,6 +46,7 @@ exports.createUser = async (req, res) => {
             companyId: req.body.companyId,
             cin: req.body.cin,
             name: req.body.name,
+            address: req.body.address,
             number: req.body.number,
             email: req.body.email,
             password: hashedPassword,
@@ -71,6 +72,38 @@ exports.createUser = async (req, res) => {
 
         res.status(201).json(user);
 
+    } catch (error) {
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            const messages = {
+                email: "Cet email est déjà utilisé",
+                number: "Ce numéro de téléphone est déjà utilisé",
+            };
+            return res.status(400).json({ message: messages[field] || "Cette valeur existe déjà" });
+        }
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+// UPDATE OWN PROFILE (authenticated user)
+exports.updateMyProfile = async (req, res) => {
+    try {
+        const allowedFields = ["email", "number"];
+        const updates = {};
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.userId,
+            updates,
+            { new: true, runValidators: true }
+        ).select("-password");
+
+        res.json(user);
     } catch (error) {
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
