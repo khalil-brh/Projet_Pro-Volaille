@@ -27,12 +27,12 @@ mongoose.connect(process.env.MONGO_URI)
 .catch(err => console.log(err));
 
 // App routes
-app.use("/api", userRoutes);
-app.use("/api", adminRoutes);
-app.use("/api", productRoutes);
-app.use("/api", contactRoutes);
-app.use("/api", cartRoutes);
-app.use("/api", orderRoutes);
+app.use("/", userRoutes);
+app.use("/", adminRoutes);
+app.use("/", productRoutes);
+app.use("/", contactRoutes);
+app.use("/", cartRoutes);
+app.use("/", orderRoutes);
 
 server.listen(process.env.PORT || 5001, () => {
     console.log(`Server running on port ${process.env.PORT || 5001}`);
