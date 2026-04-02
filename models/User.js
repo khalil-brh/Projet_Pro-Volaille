@@ -8,7 +8,10 @@ const UserSchema = new mongoose.Schema({
     },
     companyName: String,
     companyId: String,
-    cin: String,
+    cin: {
+        type: String,
+        unique:true
+    },
     name: String,
     address: {
         type: String,

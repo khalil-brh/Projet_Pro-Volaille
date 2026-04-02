@@ -52,13 +52,6 @@ exports.createOrder = async (req, res) => {
         unitPrice = +(unitPrice * (1 - activeDiscount / 100)).toFixed(2);
       }
 
-      // Check stock
-      if (item.kg > product.quantity) {
-        return res.status(400).json({
-          message: `Stock insuffisant pour "${product.title}". Disponible : ${product.quantity} kg`,
-        });
-      }
-
       orderItems.push({
         productId: product._id,
         title: product.title,

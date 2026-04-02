@@ -22,7 +22,7 @@ exports.createProduct = async (req, res) => {
 
     try {
 
-        const { title, description, quantity, price } = req.body;
+        const { title, description, price } = req.body;
         let imageUrl = null;
 
         if (req.file) {
@@ -30,7 +30,7 @@ exports.createProduct = async (req, res) => {
             imageUrl = result.secure_url;
         }
 
-        const product = new Product({ title, description, quantity, price, imageUrl });
+        const product = new Product({ title, description, price, imageUrl });
 
         await product.save();
 

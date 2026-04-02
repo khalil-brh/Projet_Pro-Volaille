@@ -53,7 +53,6 @@ exports.getCart = async (req, res) => {
           title: product.title,
           imageUrl: product.imageUrl,
           pricePerKg: unitPrice,
-          availableKg: product.quantity,
           kg: item.kg,
           subtotal: +(unitPrice * item.kg).toFixed(2),
         };
@@ -82,9 +81,6 @@ exports.addToCart = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: "Produit non trouvé" });
 
-    if (kg > product.quantity) {
-      return res.status(400).json({ message: `Stock insuffisant. Disponible : ${product.quantity} kg` });
-    }
 
     let cart = await Cart.findOne({ userId: req.userId });
     if (!cart) {
@@ -97,9 +93,6 @@ exports.addToCart = async (req, res) => {
 
     if (existingItem) {
       const newKg = existingItem.kg + kg;
-      if (newKg > product.quantity) {
-        return res.status(400).json({ message: `Stock insuffisant. Disponible : ${product.quantity} kg` });
-      }
       existingItem.kg = newKg;
     } else {
       cart.items.push({ productId, kg });
@@ -130,11 +123,6 @@ exports.updateCartItem = async (req, res) => {
 
     const item = cart.items.id(itemId);
     if (!item) return res.status(404).json({ message: "Article non trouvé" });
-
-    const product = await Product.findById(item.productId);
-    if (product && kg > product.quantity) {
-      return res.status(400).json({ message: `Stock insuffisant. Disponible : ${product.quantity} kg` });
-    }
 
     item.kg = kg;
     await cart.save();
