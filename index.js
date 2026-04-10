@@ -19,7 +19,13 @@ const server = http.createServer(app);
 socket.init(server);
 
 // Middleware (BEFORE routes)
-app.use(cors());
+app.use(cors({
+  origin: [
+    "https://www.provolaille.com/",
+    "https://provolaille.com/"
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
