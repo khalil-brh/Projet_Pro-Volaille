@@ -55,7 +55,7 @@ exports.getUserNotifications = async (req, res) => {
 // MARK USER NOTIFICATION AS READ
 exports.markUserNotificationRead = async (req, res) => {
     try {
-        const notification = await Notification.findOneAndUpdate(
+        const notification = await Notification.findOneAndReplace(
             { _id: req.params.id, userId: req.userId },
             { read: true },
             { new: true }
