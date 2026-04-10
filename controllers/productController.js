@@ -22,7 +22,14 @@ exports.createProduct = async (req, res) => {
 
     try {
 
-        const { title, description, quantity, price } = req.body;
+        const {
+            title,
+            description,
+            price,
+            discount = 0,
+            discountStartDate = null,
+            discountEndDate = null
+        } = req.body;
         let imageUrl = null;
 
         if (req.file) {
@@ -30,7 +37,15 @@ exports.createProduct = async (req, res) => {
             imageUrl = result.secure_url;
         }
 
-        const product = new Product({ title, description, quantity, price, imageUrl });
+        const product = new Product({
+            title,
+            description,
+            price,
+            imageUrl,
+            discount,
+            discountStartDate: discountStartDate || null,
+            discountEndDate: discountEndDate || null
+        });
 
         await product.save();
 
@@ -162,6 +177,7 @@ exports.getProductsPaginated = async (req, res) => {
             const activeDiscount = getActiveDiscount(p);
             if (activeDiscount > 0) {
                 p.originalPrice = p.price;
+                p.price = +(p.price * (1 - activeDiscount / 100)).toFixed(2);
                 p.activeDiscount = activeDiscount;
             }
             return p;

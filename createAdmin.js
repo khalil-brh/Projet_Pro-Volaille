@@ -11,6 +11,7 @@ async function createAdmin() {
 
     const admin = new User({
         name: process.env.NAME,
+        address:process.env.ADDRESS,
         email: process.env.EMAIL,
         password: hashedPassword,
         role: process.env.ROLE,
