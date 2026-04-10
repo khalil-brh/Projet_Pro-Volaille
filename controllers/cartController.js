@@ -159,7 +159,7 @@ exports.clearCart = async (req, res) => {
     const user = await ensureApproved(req.userId);
     if (!user) return res.status(403).json({ message: "Compte non approuvé" });
 
-    await Cart.findOneAndUpdate({ userId: req.userId }, { items: [] });
+    await Cart.findOneAndReplace({ userId: req.userId }, { items: [] });
     res.json({ message: "Panier vidé" });
   } catch (error) {
     res.status(500).json({ message: error.message });
