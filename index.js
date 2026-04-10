@@ -20,10 +20,7 @@ socket.init(server);
 
 // Middleware (BEFORE routes)
 app.use(cors({
-  origin: [
-    "https://www.provolaille.com/",
-    "https://provolaille.com/"
-  ],
+ origin: "*",
   credentials: true,
 }));
 app.use(express.json());
