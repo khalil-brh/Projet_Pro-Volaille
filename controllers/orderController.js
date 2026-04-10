@@ -4,6 +4,7 @@ const Product = require("../models/Product");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const socket = require("../socket");
+const { sendOrderStatusChangeEmail } = require("../utils/sendEmail");
 
 // Helper: check if a product has an active general discount
 const getActiveDiscount = (product) => {
@@ -163,7 +164,11 @@ exports.updateOrderStatus = async (req, res) => {
     if (estimatedDate !== undefined) updateData.estimatedDate = estimatedDate;
     if (adminNote !== undefined) updateData.adminNote = adminNote;
 
-    const order = await Order.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const order = await Order.findByIdAndUpdate(
+  req.params.id,
+  updateData,
+  { new: true }
+).populate("userId");
 
     if (!order) {
       return res.status(404).json({ message: "Commande non trouvée" });
@@ -187,6 +192,18 @@ exports.updateOrderStatus = async (req, res) => {
 
     const io = socket.getIO();
     io.emit(`notification_${order.userId}`, notification);
+
+    // Send verification email
+   
+    sendOrderStatusChangeEmail(
+  order.userId.email,
+  order.id,
+  order.status,
+  order.estimatedDate,
+  order.adminNote
+).catch(() => {});
+
+
 
     res.json({ message: "Commande mise à jour", order });
   } catch (error) {
