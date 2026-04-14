@@ -16,6 +16,14 @@ const uploadToCloudinary = (fileBuffer) => {
     });
 };
 
+const normalizeProductTaxonomy = (value) => {
+    if (value === undefined || value === null) {
+        return undefined;
+    }
+
+    return String(value).trim();
+};
+
 
 // CREATE PRODUCT (ADMIN)
 exports.createProduct = async (req, res) => {
@@ -25,6 +33,8 @@ exports.createProduct = async (req, res) => {
         const {
             title,
             description,
+            category = "",
+            subCategory = "",
             price,
             topSeller = false,
             discount = 0,
@@ -41,6 +51,8 @@ exports.createProduct = async (req, res) => {
         const product = new Product({
             title,
             description,
+            category: normalizeProductTaxonomy(category) ?? "",
+            subCategory: normalizeProductTaxonomy(subCategory) ?? "",
             price,
             imageUrl,
             topSeller: topSeller === "true" || topSeller === true,
@@ -165,6 +177,8 @@ exports.getProductsPaginated = async (req, res) => {
             filter.$or = [
                 { title: { $regex: search, $options: "i" } },
                 { description: { $regex: search, $options: "i" } },
+                { category: { $regex: search, $options: "i" } },
+                { subCategory: { $regex: search, $options: "i" } },
             ];
         }
 
@@ -208,6 +222,14 @@ exports.updateProduct = async (req, res) => {
     try {
 
         const updateData = { ...req.body };
+
+        if (updateData.category !== undefined) {
+            updateData.category = normalizeProductTaxonomy(updateData.category);
+        }
+
+        if (updateData.subCategory !== undefined) {
+            updateData.subCategory = normalizeProductTaxonomy(updateData.subCategory);
+        }
 
         if (updateData.topSeller !== undefined) {
             updateData.topSeller = updateData.topSeller === "true" || updateData.topSeller === true;

@@ -1,8 +1,11 @@
 const User = require("../models/User");
 const Commercial = require("../models/Commercial");
+const ProductCategory = require("../models/ProductCategory");
 const Notification = require("../models/Notification");
 const socket = require("../socket");
 const { sendApprovalEmail } = require("../utils/sendEmail");
+
+const normalizeCategoryValue = (value) => String(value || "").trim();
 
 // GET ALL USERS (paginated + search)
 exports.getAllUsers = async (req, res) => {
@@ -81,6 +84,79 @@ exports.createCommercial = async (req, res) => {
             return res.status(400).json({ message: messages[field] || "Cette valeur existe deja" });
         }
 
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// GET PRODUCT CATEGORIES
+exports.getProductCategories = async (req, res) => {
+    try {
+        const categories = await ProductCategory.find()
+            .sort({ name: 1 });
+
+        res.json({ categories });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// CREATE PRODUCT CATEGORY
+exports.createProductCategory = async (req, res) => {
+    try {
+        const name = normalizeCategoryValue(req.body.name);
+
+        if (!name) {
+            return res.status(400).json({ message: "Nom de categorie requis" });
+        }
+
+        const existingCategory = await ProductCategory.findOne({
+            name: { $regex: `^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" }
+        });
+
+        if (existingCategory) {
+            return res.status(400).json({ message: "Cette categorie existe deja" });
+        }
+
+        const category = await ProductCategory.create({
+            name,
+            subCategories: []
+        });
+
+        res.status(201).json({ message: "Categorie creee", category });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// CREATE PRODUCT SUBCATEGORY
+exports.createProductSubCategory = async (req, res) => {
+    try {
+        const name = normalizeCategoryValue(req.body.name);
+
+        if (!name) {
+            return res.status(400).json({ message: "Nom de sous-categorie requis" });
+        }
+
+        const category = await ProductCategory.findById(req.params.id);
+
+        if (!category) {
+            return res.status(404).json({ message: "Categorie non trouvee" });
+        }
+
+        const alreadyExists = category.subCategories.some(
+            (subCategory) => subCategory.toLowerCase() === name.toLowerCase()
+        );
+
+        if (alreadyExists) {
+            return res.status(400).json({ message: "Cette sous-categorie existe deja dans cette categorie" });
+        }
+
+        category.subCategories.push(name);
+        category.subCategories.sort((a, b) => a.localeCompare(b, "fr"));
+        await category.save();
+
+        res.status(201).json({ message: "Sous-categorie creee", category });
+    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };

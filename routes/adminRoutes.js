@@ -42,6 +42,9 @@ const {
   createCommercial,
   updateCommercial,
   deleteCommercial,
+  getProductCategories,
+  createProductCategory,
+  createProductSubCategory,
   getUser,
   approveUser,
   rejectUser,
@@ -61,6 +64,15 @@ router.get("/admin/users", adminAuth, getAllUsers);
 
 // GET COMMERCIALS
 router.get("/admin/commercials", adminAuth, getCommercials);
+
+// GET PRODUCT CATEGORIES
+router.get("/admin/product-categories", adminAuth, getProductCategories);
+
+// CREATE PRODUCT CATEGORY
+router.post("/admin/product-categories", adminAuth, createProductCategory);
+
+// CREATE PRODUCT SUBCATEGORY
+router.post("/admin/product-categories/:id/subcategories", adminAuth, createProductSubCategory);
 
 // CREATE COMMERCIAL
 router.post("/admin/commercials", adminAuth, createCommercial);
