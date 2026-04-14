@@ -85,6 +85,54 @@ exports.createCommercial = async (req, res) => {
     }
 };
 
+// UPDATE COMMERCIAL
+exports.updateCommercial = async (req, res) => {
+    try {
+        const allowedFields = ["name", "number"];
+        const updates = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ message: "Aucun champ a mettre a jour" });
+        }
+
+        if (updates.name !== undefined && !String(updates.name).trim()) {
+            return res.status(400).json({ message: "Nom requis" });
+        }
+
+        if (updates.number !== undefined && !String(updates.number).trim()) {
+            return res.status(400).json({ message: "Numero de telephone requis" });
+        }
+
+        const commercial = await Commercial.findByIdAndUpdate(
+            req.params.id,
+            updates,
+            { new: true, runValidators: true }
+        );
+
+        if (!commercial) {
+            return res.status(404).json({ message: "Commercial non trouve" });
+        }
+
+        res.json({ message: "Commercial mis a jour", commercial });
+    } catch (error) {
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            const messages = {
+                number: "Ce numero de telephone est deja utilise",
+            };
+            return res.status(400).json({ message: messages[field] || "Cette valeur existe deja" });
+        }
+
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // DELETE COMMERCIAL
 exports.deleteCommercial = async (req, res) => {
     try {

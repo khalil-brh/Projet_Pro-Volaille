@@ -2,11 +2,11 @@ const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function sendVerificationEmail(to, userName) {
+async function sendVerificationEmail(to, userName, verificationLink) {
     const mailOptions = {
 
         to,
-        subject: "Bienvenue chez Pro-Volaille - Compte en attente de validation",
+        subject: "Pro-Volaille - Verifiez votre adresse email",
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #FFF8F0; border-radius: 12px; overflow: hidden;">
                 <div style="background: #1E1210; padding: 30px; text-align: center;">
@@ -22,6 +22,12 @@ async function sendVerificationEmail(to, userName) {
                         Votre compte a bien été créé. Un administrateur va examiner vos documents
                         et valider votre compte dans les plus brefs délais.
                     </p>
+                    <div style="text-align: center; margin: 25px 0;">
+                        <a href="${verificationLink}"
+                           style="background: #FDBA4A; color: #1E1210; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block;">
+                            Verifier mon email
+                        </a>
+                    </div>
                     <div style="background: #FDBA4A22; border-left: 4px solid #FDBA4A; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
                         <p style="color: #1E1210; margin: 0; font-size: 14px;">
                             <strong>En attente de validation</strong><br/>
