@@ -38,6 +38,9 @@ router.post("/admin/login", async (req, res) => {
 
 const {
   getAllUsers,
+  getCommercials,
+  createCommercial,
+  deleteCommercial,
   getUser,
   approveUser,
   rejectUser,
@@ -54,6 +57,15 @@ const {
 
 // GET USERS
 router.get("/admin/users", adminAuth, getAllUsers);
+
+// GET COMMERCIALS
+router.get("/admin/commercials", adminAuth, getCommercials);
+
+// CREATE COMMERCIAL
+router.post("/admin/commercials", adminAuth, createCommercial);
+
+// DELETE COMMERCIAL
+router.delete("/admin/commercials/:id", adminAuth, deleteCommercial);
 
 // GET SINGLE USER
 router.get("/admin/users/:id", adminAuth, getUser);

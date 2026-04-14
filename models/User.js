@@ -34,13 +34,19 @@ const UserSchema = new mongoose.Schema({
 
     role: {
         type: String,
-        enum: ["user", "admin"],
+        enum: ["user", "admin", "commercial"],
         default: "user"
     },
 
     isValid: {
         type: Boolean,
         default: false
+    },
+
+    assignedCommercial: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Commercial",
+        default: null
     },
 
     discounts: [

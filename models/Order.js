@@ -29,8 +29,8 @@ const orderSchema = new mongoose.Schema(
     estimatedDate: { type: Date, default: null },
     address: {
       street: { type: String, required: true },
-      city: { type: String, required: true },
-      postalCode: { type: String, required: true },
+      city: { type: String, default: "" },
+      postalCode: { type: String, default: "" },
       region: { type: String, default: "" },
     },
     phone: { type: String, required: true },

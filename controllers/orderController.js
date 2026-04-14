@@ -25,7 +25,7 @@ exports.createOrder = async (req, res) => {
 
     const { address, phone, notes } = req.body;
 
-    if (!address || !address.street || !address.city || !address.postalCode || !phone) {
+    if (!address || !address.street || !phone) {
       return res.status(400).json({ message: "Adresse et téléphone requis" });
     }
 
@@ -68,7 +68,12 @@ exports.createOrder = async (req, res) => {
       userId: req.userId,
       items: orderItems,
       total: +total.toFixed(2),
-      address,
+      address: {
+        street: address.street,
+        city: address.city || "",
+        postalCode: address.postalCode || "",
+        region: address.region || "",
+      },
       phone,
       notes: notes || "",
     });

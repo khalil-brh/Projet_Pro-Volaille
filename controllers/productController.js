@@ -26,6 +26,7 @@ exports.createProduct = async (req, res) => {
             title,
             description,
             price,
+            topSeller = false,
             discount = 0,
             discountStartDate = null,
             discountEndDate = null
@@ -42,6 +43,7 @@ exports.createProduct = async (req, res) => {
             description,
             price,
             imageUrl,
+            topSeller: topSeller === "true" || topSeller === true,
             discount,
             discountStartDate: discountStartDate || null,
             discountEndDate: discountEndDate || null
@@ -206,6 +208,10 @@ exports.updateProduct = async (req, res) => {
     try {
 
         const updateData = { ...req.body };
+
+        if (updateData.topSeller !== undefined) {
+            updateData.topSeller = updateData.topSeller === "true" || updateData.topSeller === true;
+        }
 
         if (req.file) {
             const result = await uploadToCloudinary(req.file.buffer);
