@@ -9,7 +9,7 @@ const ProductSchema = new mongoose.Schema({
 
     description: {
         type: String,
-        required: true
+        default: ""
     },
 
     price: {
@@ -19,6 +19,11 @@ const ProductSchema = new mongoose.Schema({
 
     imageUrl: {
         type: String
+    },
+
+    topSeller: {
+        type: Boolean,
+        default: false
     },
 
     discount: {
