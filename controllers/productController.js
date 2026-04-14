@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const ProductCategory = require("../models/ProductCategory");
 const cloudinary = require("../config/cloudinary");
 
 
@@ -24,6 +25,34 @@ const normalizeProductTaxonomy = (value) => {
     return String(value).trim();
 };
 
+const validateProductTaxonomy = async (category, subCategory) => {
+    const normalizedCategory = normalizeProductTaxonomy(category) ?? "";
+    const normalizedSubCategory = normalizeProductTaxonomy(subCategory) ?? "";
+
+    if (!normalizedCategory && normalizedSubCategory) {
+        return "Veuillez selectionner une categorie avant la sous-categorie";
+    }
+
+    if (!normalizedCategory) {
+        return null;
+    }
+
+    const existingCategory = await ProductCategory.findOne({ name: normalizedCategory });
+
+    if (!existingCategory) {
+        return "Categorie invalide";
+    }
+
+    if (
+        normalizedSubCategory &&
+        !existingCategory.subCategories.includes(normalizedSubCategory)
+    ) {
+        return "Sous-categorie invalide pour cette categorie";
+    }
+
+    return null;
+};
+
 
 // CREATE PRODUCT (ADMIN)
 exports.createProduct = async (req, res) => {
@@ -46,6 +75,12 @@ exports.createProduct = async (req, res) => {
         if (req.file) {
             const result = await uploadToCloudinary(req.file.buffer);
             imageUrl = result.secure_url;
+        }
+
+        const taxonomyError = await validateProductTaxonomy(category, subCategory);
+
+        if (taxonomyError) {
+            return res.status(400).json({ message: taxonomyError });
         }
 
         const product = new Product({
@@ -229,6 +264,30 @@ exports.updateProduct = async (req, res) => {
 
         if (updateData.subCategory !== undefined) {
             updateData.subCategory = normalizeProductTaxonomy(updateData.subCategory);
+        }
+
+        const nextCategory = updateData.category !== undefined
+            ? updateData.category
+            : undefined;
+        const nextSubCategory = updateData.subCategory !== undefined
+            ? updateData.subCategory
+            : undefined;
+
+        if (nextCategory !== undefined || nextSubCategory !== undefined) {
+            const currentProduct = await Product.findById(req.params.id).select("category subCategory");
+
+            if (!currentProduct) {
+                return res.status(404).json({ message: "Produit non trouve" });
+            }
+
+            const taxonomyError = await validateProductTaxonomy(
+                nextCategory !== undefined ? nextCategory : currentProduct.category,
+                nextSubCategory !== undefined ? nextSubCategory : currentProduct.subCategory
+            );
+
+            if (taxonomyError) {
+                return res.status(400).json({ message: taxonomyError });
+            }
         }
 
         if (updateData.topSeller !== undefined) {
