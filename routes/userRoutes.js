@@ -11,7 +11,7 @@ const {
     deleteUser
 } = require("../controllers/userController");
 
-const { userLogin, getMe } = require("../controllers/authController");
+const { userLogin, getMe, verifyEmail, resendVerificationEmail } = require("../controllers/authController");
 const { getUserNotifications, markUserNotificationRead } = require("../controllers/notificationController");
 const userAuth = require("../middleware/userAuth");
 
@@ -19,6 +19,8 @@ const userAuth = require("../middleware/userAuth");
 router.post("/users", upload.array("files", 5), createUser);
 
 router.post("/users/login", userLogin);
+router.post("/users/verify-email", verifyEmail);
+router.post("/users/resend-verification-email", resendVerificationEmail);
 
 router.get("/users/me", getMe);
 router.put("/users/me", userAuth, updateMyProfile);

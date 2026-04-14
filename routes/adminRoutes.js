@@ -40,6 +40,7 @@ const {
   getAllUsers,
   getCommercials,
   createCommercial,
+  updateCommercial,
   deleteCommercial,
   getUser,
   approveUser,
@@ -63,6 +64,9 @@ router.get("/admin/commercials", adminAuth, getCommercials);
 
 // CREATE COMMERCIAL
 router.post("/admin/commercials", adminAuth, createCommercial);
+
+// UPDATE COMMERCIAL
+router.put("/admin/commercials/:id", adminAuth, updateCommercial);
 
 // DELETE COMMERCIAL
 router.delete("/admin/commercials/:id", adminAuth, deleteCommercial);
