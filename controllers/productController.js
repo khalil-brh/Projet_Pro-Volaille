@@ -53,6 +53,41 @@ const validateProductTaxonomy = async (category, subCategory) => {
     return null;
 };
 
+const normalizeDiscountInput = (basePrice, discountedPrice) => {
+    const numericBasePrice = Number(basePrice);
+    const numericDiscountedPrice = Number(discountedPrice);
+
+    if (
+        !discountedPrice ||
+        Number.isNaN(numericDiscountedPrice) ||
+        numericDiscountedPrice <= 0 ||
+        Number.isNaN(numericBasePrice) ||
+        numericBasePrice <= 0 ||
+        numericDiscountedPrice >= numericBasePrice
+    ) {
+        return {
+            discount: 0,
+            discountedPrice: null,
+        };
+    }
+
+    const discount = Math.round(
+        ((numericBasePrice - numericDiscountedPrice) / numericBasePrice) * 100
+    );
+
+    if (discount <= 0) {
+        return {
+            discount: 0,
+            discountedPrice: null,
+        };
+    }
+
+    return {
+        discount,
+        discountedPrice: numericDiscountedPrice,
+    };
+};
+
 
 // CREATE PRODUCT (ADMIN)
 exports.createProduct = async (req, res) => {
@@ -66,7 +101,7 @@ exports.createProduct = async (req, res) => {
             subCategory = "",
             price,
             topSeller = false,
-            discount = 0,
+            discountedPrice = "",
             discountStartDate = null,
             discountEndDate = null
         } = req.body;
@@ -83,6 +118,8 @@ exports.createProduct = async (req, res) => {
             return res.status(400).json({ message: taxonomyError });
         }
 
+        const normalizedDiscount = normalizeDiscountInput(price, discountedPrice);
+
         const product = new Product({
             title,
             description,
@@ -91,9 +128,9 @@ exports.createProduct = async (req, res) => {
             price,
             imageUrl,
             topSeller: topSeller === "true" || topSeller === true,
-            discount,
-            discountStartDate: discountStartDate || null,
-            discountEndDate: discountEndDate || null
+            discount: normalizedDiscount.discount,
+            discountStartDate: normalizedDiscount.discount > 0 ? (discountStartDate || null) : null,
+            discountEndDate: normalizedDiscount.discount > 0 ? (discountEndDate || null) : null
         });
 
         await product.save();
@@ -138,6 +175,24 @@ exports.getProducts = async (req, res) => {
         });
 
         res.json(result);
+
+    } catch (error) {
+
+        res.status(500).json({ message: error.message });
+
+    }
+
+};
+
+// GET PRODUCT CATEGORIES (PUBLIC)
+exports.getPublicProductCategories = async (req, res) => {
+
+    try {
+
+        const categories = await ProductCategory.find()
+            .sort({ name: 1 });
+
+        res.json({ categories });
 
     } catch (error) {
 
@@ -293,6 +348,33 @@ exports.updateProduct = async (req, res) => {
         if (updateData.topSeller !== undefined) {
             updateData.topSeller = updateData.topSeller === "true" || updateData.topSeller === true;
         }
+
+        const nextBasePrice = updateData.price !== undefined
+            ? updateData.price
+            : undefined;
+        const nextDiscountedPrice = updateData.discountedPrice;
+
+        if (nextDiscountedPrice !== undefined || nextBasePrice !== undefined) {
+            const currentProduct = await Product.findById(req.params.id).select("price");
+
+            if (!currentProduct) {
+                return res.status(404).json({ message: "Produit non trouve" });
+            }
+
+            const normalizedDiscount = normalizeDiscountInput(
+                nextBasePrice !== undefined ? nextBasePrice : currentProduct.price,
+                nextDiscountedPrice !== undefined ? nextDiscountedPrice : ""
+            );
+
+            updateData.discount = normalizedDiscount.discount;
+
+            if (normalizedDiscount.discount <= 0) {
+                updateData.discountStartDate = null;
+                updateData.discountEndDate = null;
+            }
+        }
+
+        delete updateData.discountedPrice;
 
         if (req.file) {
             const result = await uploadToCloudinary(req.file.buffer);
