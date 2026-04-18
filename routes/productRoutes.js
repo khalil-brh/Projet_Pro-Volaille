@@ -9,6 +9,7 @@ const userAuth = require("../middleware/userAuth");
 const {
     createProduct,
     getProducts,
+    getPublicProductCategories,
     getProductsPaginated,
     getMyProducts,
     updateProduct,
@@ -18,6 +19,7 @@ const {
 
 // PUBLIC ROUTE
 router.get("/products", getProducts);
+router.get("/product-categories", getPublicProductCategories);
 
 // AUTHENTICATED USER ROUTE (with discount applied)
 router.get("/products/me", userAuth, getMyProducts);
